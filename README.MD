@@ -1,84 +1,248 @@
-🚀 Real-Time Anomaly Detection Pipeline with Kafka, ML & ELK
-📌 Overview
+🔐 Real-Time Anomaly Detection Pipeline (Kafka + ML + Elasticsearch + Kibana)
 
-This project implements a real-time anomaly detection system for cybersecurity.
-It integrates:
+End-to-end streaming system that ingests network events, classifies attacks with ML in real time, and visualizes them in Kibana. Built to demonstrate scaling, load balancing, and fault tolerance.
 
-Kafka – Streaming platform for reliable event ingestion.
+✨ Highlights
 
-Producers – Simulated network traffic events (with anomalies).
+4 Producers (slightly different traffic patterns) → Kafka topic (anomaly-events, 4 partitions)
 
-Consumers – Three independent consumers to demonstrate Kafka load balancing.
+3 Consumers (same logic, different IDs) in one consumer group → automatic partition balancing
 
-ML Model – Classifies events into attack categories (Normal, Phishing, Malware, Zero-Day Exploit, etc.).
+ML inference with Random Forest (scikit-learn) → class prediction + probabilities
 
-Elasticsearch – Stores classified events for querying.
+Elasticsearch indexing → Kibana Lens dashboards & live filtering
 
-Kibana – Visualizes anomalies with dashboards & charts.
+Health logging: registration, deregistration, heartbeats, failed-node detection
 
-👉 This mimics how real-world security monitoring pipelines are built for detecting intrusions and malicious activity.
+🗺️ High-Level Design (HLD)
+flowchart LR
+  subgraph Producers
+    P1[Producer 1]
+    P2[Producer 2]
+    P3[Producer 3]
+    P4[Producer 4]
+  end
 
-⚡ Features
+  subgraph Kafka[Kafka Broker (KRaft)]
+    T[(Topic: anomaly-events\nPartitions: 4)]
+    L[(Topic: service_logs)]
+  end
 
-✅ Distributed Streaming – Multiple producers and consumers with partitioned topics.
-✅ Load Balancing Proof – Kill one consumer, Kafka rebalances partitions to others.
-✅ Reliable Delivery – Producer uses acks=all & idempotence to avoid data loss.
-✅ ML Integration – Real-time classification of network traffic into attacks.
-✅ Kibana Dashboards – Visualize anomaly trends, top source IPs, attack categories.
-✅ Scalable Design – Easy to extend with more consumers/brokers.
+  subgraph Consumers[Consumer Group: anomaly-detector]
+    C1[Consumer 1\nID: consumer-1]
+    C2[Consumer 2\nID: consumer-2]
+    C3[Consumer 3\nID: consumer-3]
+  end
 
-🐳 Setup Instructions
-1️⃣ Clone the repository
-git clone https://github.com/<your-username>/anomaly-detection-pipeline.git
-cd anomaly-detection-pipeline
+  subgraph ML[ML Inference]
+    RF[Random Forest\n(sklean)]
+  end
 
-2️⃣ Create a Conda environment
+  ES[(Elasticsearch Index: anomalies)]
+  K[(Kibana Dashboards)]
+
+  P1 --> T
+  P2 --> T
+  P3 --> T
+  P4 --> T
+
+  C1 --> T
+  C2 --> T
+  C3 --> T
+
+  C1 --> RF --> ES
+  C2 --> RF
+  C3 --> RF
+
+  C1 --> L
+  C2 --> L
+  C3 --> L
+
+  ES --> K
+
+📦 Tech Stack
+Layer	Tooling	Notes
+Stream Transport	Apache Kafka (single broker, KRaft)	Topic anomaly-events (4 partitions), service_logs for heartbeats
+Producers	Python + kafka-python	4 variants: baseline / high-anomaly / extra-metadata / bursty
+Consumers	Python + kafka-python, pandas, joblib	3 containers with unique IDs; same logic & group
+ML	RandomForestClassifier (scikit-learn)	Outputs predicted_attack and class_probabilities
+Storage	Elasticsearch	Index anomalies
+Viz	Kibana	Lens dashboards (pie/line/metrics/tables)
+🧾 Event Schema (Producer → Kafka)
+
+Topic: anomaly-events
+Content-Type: JSON (UTF-8)
+
+{
+  "timestamp": "2025-08-17 20:08:26",
+  "src_ip": "192.168.0.42",
+  "dst_ip": "10.0.0.105",
+  "bytes_sent": 163,
+  "meta": {
+    "producer_id": "3",
+    "burst": false,
+    "note": "optional metadata per producer"
+  }
+}
+
+
+Some producers enrich metadata (e.g., source_ip vs src_ip, burst markers). Consumers normalize fields before feature extraction.
+
+Heartbeat / Service Log (Topic: service_logs)
+
+{
+  "node_id": "consumer-1",
+  "timestamp": "2025-08-17T20:09:00.123456",
+  "message_type": "HEARTBEAT", // or REGISTRATION / DEREGISTRATION
+  "processed_count": 128
+}
+
+🧠 ML Model (Inference)
+
+Algorithm: Random Forest (scikit-learn)
+
+Target classes (example): ["Benign", "Phishing", "Malware", "Port Scan", "Zero-Day Exploit"]
+
+Features (derived in consumer):
+
+bytes_sent (numeric)
+
+src_ip_int, dst_ip_int (IPv4 converted to 32-bit ints)
+
+hour_of_day (0–23)
+
+ip_diff = abs(src_ip_int - dst_ip_int)
+
+Outputs written to ES:
+
+{
+  "timestamp": "2025-08-17 20:08:26",
+  "src_ip": "192.168.0.42",
+  "dst_ip": "10.0.0.105",
+  "bytes_sent": 163,
+  "predicted_attack": "Phishing",
+  "class_probabilities": [0.005, 0.061, 0.136, 0.773, 0.025]
+}
+
+
+Model is loaded via joblib.load("rf_model.pkl"). Replace with your trained artifact as needed.
+
+📈 Operational Metrics (what to track/demo)
+
+Ingress rate: messages/sec from producers
+
+Throughput: consumed msgs/sec per consumer
+
+Consumer lag: per partition (proof of scaling)
+
+Heartbeats: last seen per consumer (service_logs)
+
+Anomaly counters: per class, per time bucket
+
+Top talkers: src_ip by sum(bytes_sent)
+
+🧪 Proof of Load Balancing (Interview Demo)
+
+Start all consumers (same group_id, different IDs).
+
+Check assignments:
+
+docker exec -it kafka kafka-consumer-groups \
+  --bootstrap-server kafka:9092 \
+  --group anomaly-detector \
+  --describe
+
+
+Kill consumer-2 → re-run the command → partitions reassign to consumer-1 & consumer-3.
+
+Start a new consumer → watch rebalance again.
+
+⚙️ Setup & Run
+1) Prereqs
+
+Docker & Docker Compose
+
+(Optional) Conda env for local scripts
+
+2) Environment (Conda)
 conda create -n anomaly-detection python=3.9 -y
 conda activate anomaly-detection
 pip install -r requirements.txt
 
-3️⃣ Start Docker stack
+3) Bring up infra
 docker-compose up -d
 
+4) Create Kafka topic (4 partitions)
+docker exec -it kafka kafka-topics --create \
+  --topic anomaly-events \
+  --bootstrap-server kafka:9092 \
+  --partitions 4 --replication-factor 1
 
-This starts:
+5) Run producers (examples)
+# In separate terminals or as services in compose
+python producer1.py
+python producer2.py
+python producer3.py
+python producer4.py
 
-Kafka broker (on localhost:29092)
+6) Run consumers (same script logic, unique IDs)
+python consumer1.py  # uses "consumer-1"
+python consumer2.py  # uses "consumer-2"
+python consumer3.py  # uses "consumer-3"
 
-Zookeeper
+7) Kibana
 
-Elasticsearch (on localhost:9200)
+Open http://localhost:5601
 
-Kibana (on localhost:5601)
+Create Data View (Index Pattern) → anomalies
 
-4️⃣ Run Producer(s)
-python producer.py
+Use Lens to build:
 
-5️⃣ Run Consumers
+Pie: count by predicted_attack
 
-You can run 1, 2, or 3 consumers:
+Line: count over time (date histogram), split by predicted_attack
 
-python consumer1.py
-python consumer2.py
-python consumer3.py
+Bar: top src_ip by sum(bytes_sent)
+
+Metric: total anomalies (NOT predicted_attack:"Benign")
+
+🧹 Cleaning Local Data (before committing)
+
+These folders grow fast and should not be in git:
+
+rm -rf ./data ./logs ./elasticsearch-data ./kafka-data ./kibana-data
 
 
-👉 Proof of load balancing:
+.gitignore should exclude them (and Conda/venv artifacts).
 
-Kill one consumer → partitions are reassigned to others.
+📁 Suggested Repo Layout
+anomaly-pipeline/
+├─ docker-compose.yml
+├─ producers/
+│  ├─ producer1.py
+│  ├─ producer2.py
+│  ├─ producer3.py
+│  └─ producer4.py
+├─ consumers/
+│  ├─ consumer1.py
+│  ├─ consumer2.py
+│  └─ consumer3.py
+├─ models/
+│  └─ rf_model.pkl
+├─ requirements.txt
+├─ README.md
+└─ .gitignore
 
-Start a new consumer → it auto-joins the group.
+🚀 Future Enhancements (nice to mention in interviews)
 
-6️⃣ View in Kibana
+Multi-broker Kafka (RF=3) for true fault tolerance
 
-Go to http://localhost:5601
+Consumer autoscaling (KEDA/Kubernetes or Swarm)
 
-Create an index pattern anomalies-*
+Dead-letter topic for bad/poison messages
 
-Explore raw logs & build dashboards for:
+Schema Registry (Avro/Protobuf) for contracts
 
-Attack types distribution
+Alerting (Slack/email) on anomaly spikes or node failure
 
-Top malicious source IPs
-
-Anomalies over time
+Prometheus + Grafana for infra metrics
