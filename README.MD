@@ -17,7 +17,7 @@ A streaming ML pipeline that catches network anomalies faster than you can say "
 - **Visualizes**: Pretty Kibana dashboards that actually make sense
 - **Scales**: Horizontally, because we're not monsters
 
-## Architecture
+## High Level Design
 
 ```mermaid
 %%{init: {
