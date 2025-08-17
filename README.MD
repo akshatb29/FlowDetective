@@ -91,15 +91,4 @@ docker-compose down -v
 - Real-time alerting (3 AM notifications, anyone?)
 - More ML models (because one is never enough)
 
-## Tech Stack
-
-![Kafka](https://img.shields.io/badge/Apache_Kafka-231F20?style=flat-square&logo=apache-kafka&logoColor=white)
-![Elasticsearch](https://img.shields.io/badge/Elasticsearch-005571?style=flat-square&logo=elasticsearch&logoColor=white)
-![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
-
----
-
-*Made with 💻, 🧠, and a healthy disrespect for manual log analysis.*
-
 **Pro tip**: In cybersecurity, paranoia isn't a bug—it's a feature! 🔐
