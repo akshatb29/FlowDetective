@@ -81,6 +81,7 @@ graph LR
     
     ML --> ES
     ES --> KB
+```
 
 ## Quick Start
 
