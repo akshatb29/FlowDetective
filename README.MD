@@ -17,6 +17,71 @@ A streaming ML pipeline that catches network anomalies faster than you can say "
 - **Visualizes**: Pretty Kibana dashboards that actually make sense
 - **Scales**: Horizontally, because we're not monsters
 
+## Architecture
+
+```mermaid
+%%{init: {
+  'theme': 'dark',
+  'themeVariables': {
+    'primaryColor': '#21262d',
+    'primaryTextColor': '#f0f6fc',
+    'primaryBorderColor': '#30363d',
+    'lineColor': '#7d8590',
+    'secondaryColor': '#161b22',
+    'tertiaryColor': '#0d1117',
+    'background': '#0d1117',
+    'mainBkg': '#21262d',
+    'secondBkg': '#1c2128',
+    'fontFamily': 'SF Mono, Monaco, Inconsolata, Roboto Mono, monospace',
+    'fontSize': '12px',
+    'c0': '#58a6ff',
+    'c1': '#56d364', 
+    'c2': '#f2cc60',
+    'c3': '#f85149',
+    'c4': '#bc8cff'
+  }
+}}%%
+
+graph LR
+    subgraph "Sources"
+        P1[Producer 1]
+        P2[Producer 2] 
+        P3[Producer 3]
+        P4[Producer 4]
+    end
+    
+    subgraph "Processing"
+        K[Kafka Topic<br/>4 partitions]
+        C1[Consumer 1]
+        C2[Consumer 2]
+        C3[Consumer 3]
+        ML[Random Forest<br/>ML Model]
+    end
+    
+    subgraph "Storage"
+        ES[Elasticsearch]
+    end
+    
+    subgraph "Visualization"
+        KB[Kibana]
+    end
+    
+    P1 --> K
+    P2 --> K
+    P3 --> K
+    P4 --> K
+    
+    K --> C1
+    K --> C2
+    K --> C3
+    
+    C1 --> ML
+    C2 --> ML
+    C3 --> ML
+    
+    ML --> ES
+    ES --> KB
+
 ## Quick Start
 
 ```bash
