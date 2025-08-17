@@ -10,6 +10,75 @@
 
 An end-to-end streaming system that ingests network events faster than your morning coffee kicks in, classifies potential attacks using machine learning, and serves up beautiful visualizations that would make even Grafana jealous.
 
+graph TB
+    subgraph "Data Sources"
+        P1[Producer 1<br/>Network Devices]
+        P2[Producer 2<br/>Security Tools]
+        P3[Producer 3<br/>Application Logs]
+        P4[Producer 4<br/>Infrastructure]
+    end
+    
+    subgraph "Stream Processing Layer"
+        K[Apache Kafka<br/>anomaly-events topic<br/>4 partitions]
+        CG[Consumer Group<br/>anomaly-detector]
+        C1[Consumer 1<br/>ML Inference]
+        C2[Consumer 2<br/>ML Inference] 
+        C3[Consumer 3<br/>ML Inference]
+    end
+    
+    subgraph "ML Processing"
+        RF[Random Forest<br/>Classifier<br/>5 Classes]
+        FE[Feature<br/>Engineering]
+    end
+    
+    subgraph "Storage & Search"
+        ES[Elasticsearch<br/>anomalies index]
+        ESM[ES Master Node]
+        ESD1[ES Data Node 1]
+        ESD2[ES Data Node 2]
+    end
+    
+    subgraph "Visualization & Monitoring"
+        KB[Kibana<br/>Dashboards]
+        AL[Alerting<br/>System]
+        MT[Metrics<br/>Collection]
+    end
+    
+    subgraph "Service Health"
+        HL[Health Logs<br/>service_logs topic]
+        HM[Health<br/>Monitoring]
+    end
+    
+    P1 --> K
+    P2 --> K
+    P3 --> K
+    P4 --> K
+    
+    K --> CG
+    CG --> C1
+    CG --> C2
+    CG --> C3
+    
+    C1 --> FE --> RF
+    C2 --> FE
+    C3 --> FE
+    
+    RF --> ES
+    ES --> ESM
+    ESM --> ESD1
+    ESM --> ESD2
+    
+    ES --> KB
+    ES --> AL
+    
+    C1 --> HL
+    C2 --> HL
+    C3 --> HL
+    HL --> HM
+    
+    KB --> MT
+    AL --> MT
+
 ## 🎯 What Does This Thing Actually Do?
 
 This pipeline is like having a digital security guard that never sleeps, never takes coffee breaks, and definitely doesn't spend time scrolling social media. It:
