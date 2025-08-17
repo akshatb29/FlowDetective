@@ -1,3 +1,9 @@
+[![Apache Kafka](https://img.shields.io/badge/Apache_Kafka-231F20?style=for-the-badge&logo=apache-kafka&logoColor=white)](https://kafka.apache.org/)
+[![Elasticsearch](https://img.shields.io/badge/Elasticsearch-005571?style=for-the-badge&logo=elasticsearch&logoColor=white)](https://www.elastic.co/)
+[![Kibana](https://img.shields.io/badge/Kibana-005571?style=for-the-badge&logo=kibana&logoColor=white)](https://www.elastic.co/kibana/)
+[![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org/)
+[![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com/)
+
 # 🚨 Real-Time Anomaly Detection Pipeline
 
 > *Because manually checking logs is so 2019*
@@ -56,20 +62,6 @@ open http://localhost:5601
 - **Elasticsearch**: Your data's new best friend
 - **Kibana**: Makes ugly data beautiful
 
-## Demo Load Balancing (Interview Gold)
-
-```bash
-# Check partition assignments
-docker exec -it kafka kafka-consumer-groups \
-  --bootstrap-server kafka:9092 \
-  --group anomaly-detector \
-  --describe
-
-# Kill a consumer (dramatic pause for effect)
-# Watch partitions automatically rebalance
-# Resurrect the consumer
-# Marvel at the self-healing architecture ✨
-```
 
 ## ML Model
 
@@ -81,17 +73,6 @@ Detects these attack types:
 - **Zero-Day Exploit** (the "this shouldn't exist" category)
 
 **Features**: IP addresses, byte counts, timestamps, and mathematical relationships that would make Pythagoras proud.
-
-## File Structure
-
-```
-anomaly-pipeline/
-├── producers/          # The data generators
-├── consumers/          # The processing powerhouses  
-├── models/            # ML brain (Random Forest)
-├── docker-compose.yml # Container orchestration magic
-└── requirements.txt   # Dependency declarations
-```
 
 ## Cleanup
 
