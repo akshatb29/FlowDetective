@@ -136,7 +136,6 @@ Detects these attack types:
 - **Phishing** (digital fishing, but ruder)
 - **Malware** (software with commitment issues)
 - **Port Scan** (digital door-knocking)
-- **Zero-Day Exploit** (the "this shouldn't exist" category)
 
 **Features**: IP addresses, byte counts, timestamps, and mathematical relationships that would make Pythagoras proud.
 
